@@ -7,9 +7,6 @@ import com.sky.result.PageResult;
 import com.sky.vo.DishVO;
 import java.util.List;
 
-/**
- * 菜品管理
- */
 public interface DishService {
 
     /**
@@ -26,11 +23,18 @@ public interface DishService {
     PageResult pageQuery(DishPageQueryDTO dishPageQueryDTO);
 
     /**
-     * 根据ID查询菜品和口味
+     * 根据ID查询菜品
      * @param id
      * @return
      */
     DishVO getById(Long id);
+
+    /**
+     * 根据分类ID查询菜品
+     * @param categoryId
+     * @return
+     */
+    List<Dish> getByCategoryId(Long categoryId);
 
     /**
      * 修改菜品状态（起售/停售）
@@ -46,22 +50,15 @@ public interface DishService {
     void updateWithFlavor(DishDTO dishDTO);
 
     /**
-     * 删除菜品（支持批量删除，ids 用逗号分隔）
+     * 批量删除菜品
      * @param ids
      */
     void deleteByIds(String ids);
 
     /**
-     * 根据分类ID查询起售中的菜品
-     * @param categoryId
-     * @return
-     */
-    List<Dish> getByCategoryId(Long categoryId);
-
-    /**
-     * 菜品条件查询
+     * 条件查询菜品和口味
      * @param dish
      * @return
      */
-    List<Dish> list(Dish dish);
+    List<DishVO> listWithFlavor(Dish dish);
 }

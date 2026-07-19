@@ -15,3 +15,6 @@ sky:
     oss:
       endpoint: oss-cn-shenzhen.aliyuncs.com
       bucket-name: yzf-waimai
+  wechat:
+    appid: wx7e8e706d6932663f
+    secret: 46d8d6a0a74c3064d78dd14b0b7d79df
