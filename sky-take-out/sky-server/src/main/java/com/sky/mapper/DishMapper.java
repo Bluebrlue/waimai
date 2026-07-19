@@ -95,4 +95,12 @@ public interface DishMapper {
      */
     @Delete("delete from dish_flavor where dish_id = #{dishId}")
     void deleteFlavorsByDishId(Long dishId);
+
+    /**
+     * 根据套餐id查询关联的菜品列表
+     * @param setmealId
+     * @return
+     */
+    @Select("select d.* from dish d left join setmeal_dish sd on d.id = sd.dish_id where sd.setmeal_id = #{setmealId}")
+    List<Dish> getBySetmealId(Long setmealId);
 }

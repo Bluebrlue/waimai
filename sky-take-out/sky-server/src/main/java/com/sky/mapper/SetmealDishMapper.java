@@ -40,4 +40,18 @@ public interface SetmealDishMapper {
      */
     @Select("<script>select setmeal_id from setmeal_dish where dish_id in <foreach collection='dishIds' item='id' open='(' separator=',' close=')'>#{id}</foreach></script>")
     List<Long> getSetmealIdByDishIds(List<Long> dishIds);
+
+    /**
+     * 批量插入套餐菜品关联
+     * @param setmealDishes
+     */
+    void insertBatch(List<SetmealDish> setmealDishes);
+
+    /**
+     * 根据套餐id删除关联的菜品
+     * @param setmealId
+     */
+    @Delete("delete from setmeal_dish where setmeal_id = #{setmealId}")
+    void deleteBySetmealId(Long setmealId);
+
 }
