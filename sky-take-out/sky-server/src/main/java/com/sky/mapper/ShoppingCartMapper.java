@@ -1,83 +1,71 @@
 package com.sky.mapper;
 
 import com.sky.entity.ShoppingCart;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.stereotype.Repository;
+import org.apache.ibatis.annotations.*;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 /**
- * 基于 Redis 的购物车数据访问
- * key: cart:user:{userId}
- * field: {type}:{dishId|setmealId}:{dishFlavor}
- * value: ShoppingCart (JSON)
+ * 基于 MySQL 的购物车数据访问
  */
-@Repository
-public class ShoppingCartMapper {
-
-    @Autowired
-    private RedisTemplate<String, Object> redisTemplate;
-
-    private static final String KEY_PREFIX = "cart:user:";
+@Mapper
+public interface ShoppingCartMapper {
 
     /**
      * 查询某用户购物车全部数据
-     * @param userId
+     * @param shoppingCart 查询条件（userId 必填）
      * @return
      */
-    public List<ShoppingCart> list(Long userId) {
-        String key = KEY_PREFIX + userId;
-        Map<Object, Object> entries = redisTemplate.opsForHash().entries(key);
-        if (entries == null || entries.isEmpty()) {
-            return new ArrayList<>();
-        }
-        List<ShoppingCart> list = new ArrayList<>();
-        for (Object value : entries.values()) {
-            list.add((ShoppingCart) value);
-        }
-        return list;
-    }
+    @Select("select * from shopping_cart where user_id = #{userId} order by create_time desc")
+    List<ShoppingCart> list(ShoppingCart shoppingCart);
 
     /**
-     * 判断购物车中是否已存在某个商品
-     * @param key 完整的 Redis key
-     * @param field 商品唯一标识
+     * 查询某用户购物车中是否存在指定条件的商品
+     * 按 userId + dishId + dishFlavor 或 userId + setmealId 精确匹配
+     * @param shoppingCart 查询条件
      * @return
      */
-    public ShoppingCart getByField(String key, String field) {
-        Object obj = redisTemplate.opsForHash().get(key, field);
-        return obj == null ? null : (ShoppingCart) obj;
-    }
+    @Select("select * from shopping_cart " +
+            "where user_id = #{userId} " +
+            "and (#{dishId} is not null and dish_id = #{dishId} and dish_flavor = #{dishFlavor} " +
+            "     or #{setmealId} is not null and setmeal_id = #{setmealId})")
+    ShoppingCart getByCondition(ShoppingCart shoppingCart);
 
     /**
-     * 添加或修改购物车商品
-     * @param key
-     * @param field
+     * 更新购物车商品数量
      * @param shoppingCart
      */
-    public void put(String key, String field, ShoppingCart shoppingCart) {
-        redisTemplate.opsForHash().put(key, field, shoppingCart);
-    }
+    @Update("update shopping_cart set number = #{number} where id = #{id}")
+    void updateNumber(ShoppingCart shoppingCart);
+
+    /**
+     * 插入购物车商品
+     * @param shoppingCart
+     */
+    @Insert("insert into shopping_cart (name, user_id, dish_id, setmeal_id, dish_flavor, number, amount, image, create_time) " +
+            "values (#{name}, #{userId}, #{dishId}, #{setmealId}, #{dishFlavor}, #{number}, #{amount}, #{image}, #{createTime})")
+    @Options(useGeneratedKeys = true, keyProperty = "id")
+    void insert(ShoppingCart shoppingCart);
 
     /**
      * 删除某个购物车商品
-     * @param key
-     * @param field
+     * @param id
      */
-    public void remove(String key, String field) {
-        redisTemplate.opsForHash().delete(key, field);
-    }
+    @Delete("delete from shopping_cart where id = #{id}")
+    void deleteById(Long id);
 
     /**
      * 清空该用户购物车
      * @param userId
      */
-    public void clean(Long userId) {
-        redisTemplate.delete(KEY_PREFIX + userId);
-    }
+    @Delete("delete from shopping_cart where user_id = #{userId}")
+    void clean(Long userId);
+
+    /**
+     * 根据用户id清空购物车（deleteByUserId 供 Service 层调用）
+     * @param userId
+     */
+    @Delete("delete from shopping_cart where user_id = #{userId}")
+    void deleteByUserId(Long userId);
 
 }
